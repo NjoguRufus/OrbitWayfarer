@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Menu, X, LogOut, Map, Compass, Info, Phone, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
@@ -45,37 +45,58 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/destinations" className="text-gray-700 hover:text-blue-600 transition-colors">
-                Destinations
+              <Link 
+                to="/destinations" 
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors group"
+              >
+                <Map className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                <span>Destinations</span>
               </Link>
-              <Link to="/tours" className="text-gray-700 hover:text-blue-600 transition-colors">
-                Tours
+              <Link 
+                to="/tours" 
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors group"
+              >
+                <Compass className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                <span>Tours</span>
               </Link>
-              <Link to="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
-                About
+              <Link 
+                to="/about" 
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors group"
+              >
+                <Info className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                <span>About</span>
               </Link>
-              <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-                Contact
+              <Link 
+                to="/contact" 
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors group"
+              >
+                <Phone className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                <span>Contact</span>
               </Link>
               {currentUser ? (
                 <div className="flex items-center space-x-4">
-                  <Link to="/profile" className="text-gray-700 hover:text-blue-600 transition-colors">
-                    Profile
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors group"
+                  >
+                    <User className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                    <span>Profile</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center text-red-600 hover:text-red-700 transition-colors"
+                    className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors group"
                   >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Logout
+                    <LogOut className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                    <span>Logout</span>
                   </button>
                 </div>
               ) : (
                 <Link 
                   to="/login" 
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg group"
                 >
-                  Sign In
+                  <User className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                  <span>Sign In</span>
                 </Link>
               )}
             </div>
@@ -87,59 +108,65 @@ const Navbar = () => {
               <div className="flex flex-col space-y-4">
                 <Link 
                   to="/destinations" 
-                  className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Destinations
+                  <Map className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                  <span>Destinations</span>
                 </Link>
                 <Link 
                   to="/tours" 
-                  className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Tours
+                  <Compass className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                  <span>Tours</span>
                 </Link>
                 <Link 
                   to="/about" 
-                  className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  About
+                  <Info className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                  <span>About</span>
                 </Link>
                 <Link 
                   to="/contact" 
-                  className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Contact
+                  <Phone className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                  <span>Contact</span>
                 </Link>
                 {currentUser ? (
                   <>
                     <Link 
                       to="/profile" 
-                      className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Profile
+                      <User className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                      <span>Profile</span>
                     </Link>
                     <button
                       onClick={() => {
                         handleLogout();
                         setIsMenuOpen(false);
                       }}
-                      className="flex items-center text-red-600 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                      className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 group w-full"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                      <LogOut className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                      <span>Logout</span>
                     </button>
                   </>
                 ) : (
                   <Link 
                     to="/login" 
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center shadow-md hover:shadow-lg"
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center shadow-md hover:shadow-lg group"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Sign In
+                    <User className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
+                    <span>Sign In</span>
                   </Link>
                 )}
               </div>

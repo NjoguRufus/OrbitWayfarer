@@ -22,12 +22,14 @@ import Santorini from './pages/destinations/Santorini';
 import Bali from './pages/destinations/Bali';
 import Maldives from './pages/destinations/Maldives';
 import PayPalProvider from './components/PayPalProvider';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <AuthProvider>
       <PayPalProvider>
         <Router>
+          <ScrollToTop />
           <div className="min-h-screen bg-white flex flex-col">
             <Navbar />
             <main className="flex-grow">

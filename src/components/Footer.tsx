@@ -10,7 +10,10 @@ import {
   MapPin,
   Globe,
   Clock,
-  Heart
+  Heart,
+  Info,
+  Send,
+  Navigation
 } from 'lucide-react';
 
 const Footer = () => {
@@ -43,18 +46,18 @@ const Footer = () => {
               "Embark on extraordinary journeys, create timeless memories"
             </p>
             <div className="space-y-4">
-              <div className="flex items-center text-gray-300 hover:text-blue-400 transition-colors">
-                <Phone className="w-5 h-5 mr-3 text-blue-400" />
+              <div className="flex items-center text-gray-300 hover:text-blue-400 transition-colors group cursor-pointer">
+                <Phone className="w-5 h-5 mr-3 text-blue-400 transform group-hover:rotate-12 transition-transform" />
                 <span>+1 (555) 123-4567</span>
               </div>
-              <div className="flex items-center text-gray-300">
-                <Mail className="w-5 h-5 mr-3 text-blue-400" />
+              <div className="flex items-center text-gray-300 group">
+                <Mail className="w-5 h-5 mr-3 text-blue-400 transform group-hover:scale-110 transition-transform" />
                 <a href="mailto:info@orbitwayfarer.com" className="hover:text-blue-400 transition-colors">
                   info@orbitwayfarer.com
                 </a>
               </div>
-              <div className="flex items-center text-gray-300">
-                <MapPin className="w-5 h-5 mr-3 text-blue-400" />
+              <div className="flex items-center text-gray-300 group">
+                <MapPin className="w-5 h-5 mr-3 text-blue-400 transform group-hover:bounce transition-transform" />
                 <span>123 Adventure Street, Travel City</span>
               </div>
             </div>
@@ -68,25 +71,25 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li>
                   <Link to="/about" className="text-gray-300 hover:text-blue-400 flex items-center group">
-                    <Globe className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    <Globe className="w-4 h-4 mr-2 transform group-hover:rotate-180 transition-transform duration-500" />
                     About Us
                   </Link>
                 </li>
                 <li>
                   <Link to="/destinations" className="text-gray-300 hover:text-blue-400 flex items-center group">
-                    <MapPin className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    <Navigation className="w-4 h-4 mr-2 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     Destinations
                   </Link>
                 </li>
                 <li>
                   <Link to="/tours" className="text-gray-300 hover:text-blue-400 flex items-center group">
-                    <Plane className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    <Plane className="w-4 h-4 mr-2 transform group-hover:translate-x-2 transition-transform" />
                     Tours
                   </Link>
                 </li>
                 <li>
                   <Link to="/contact" className="text-gray-300 hover:text-blue-400 flex items-center group">
-                    <Mail className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    <Send className="w-4 h-4 mr-2 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     Contact
                   </Link>
                 </li>
@@ -98,15 +101,15 @@ const Footer = () => {
               <h3 className="text-white text-lg font-semibold mb-6">Opening Hours</h3>
               <ul className="space-y-4">
                 <li className="flex items-center text-gray-300 group">
-                  <Clock className="w-4 h-4 mr-2 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <Clock className="w-4 h-4 mr-2 text-blue-400 transform group-hover:rotate-180 transition-transform duration-700" />
                   Mon - Fri: 9:00 AM - 6:00 PM
                 </li>
                 <li className="flex items-center text-gray-300 group">
-                  <Clock className="w-4 h-4 mr-2 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <Clock className="w-4 h-4 mr-2 text-blue-400 transform group-hover:rotate-180 transition-transform duration-700" />
                   Saturday: 10:00 AM - 4:00 PM
                 </li>
                 <li className="flex items-center text-gray-300 group">
-                  <Clock className="w-4 h-4 mr-2 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <Clock className="w-4 h-4 mr-2 text-blue-400 transform group-hover:rotate-180 transition-transform duration-700" />
                   Sunday: Closed
                 </li>
               </ul>
@@ -117,14 +120,14 @@ const Footer = () => {
           <div className="lg:col-span-3">
             <h3 className="text-white text-lg font-semibold mb-6">Follow Us</h3>
             <div className="flex space-x-4">
-              <a href="#" className="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition-all hover:scale-110">
-                <Facebook className="w-5 h-5 text-white" />
+              <a href="#" className="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition-all hover:scale-110 group">
+                <Facebook className="w-5 h-5 text-white transform group-hover:rotate-12 transition-transform" />
               </a>
-              <a href="#" className="bg-blue-400 p-2 rounded-full hover:bg-blue-500 transition-all hover:scale-110">
-                <Twitter className="w-5 h-5 text-white" />
+              <a href="#" className="bg-blue-400 p-2 rounded-full hover:bg-blue-500 transition-all hover:scale-110 group">
+                <Twitter className="w-5 h-5 text-white transform group-hover:-rotate-12 transition-transform" />
               </a>
-              <a href="#" className="bg-pink-600 p-2 rounded-full hover:bg-pink-700 transition-all hover:scale-110">
-                <Instagram className="w-5 h-5 text-white" />
+              <a href="#" className="bg-pink-600 p-2 rounded-full hover:bg-pink-700 transition-all hover:scale-110 group">
+                <Instagram className="w-5 h-5 text-white transform group-hover:rotate-12 transition-transform" />
               </a>
             </div>
           </div>
@@ -136,9 +139,9 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mb-4 sm:mb-0">
               © 2024 OrbitWayfarer. All rights reserved.
             </p>
-            <div className="flex items-center text-gray-400 text-sm">
+            <div className="flex items-center text-gray-400 text-sm group">
               <span>Made with</span>
-              <Heart className="w-4 h-4 mx-1 text-red-500 fill-current animate-pulse" />
+              <Heart className="w-4 h-4 mx-1 text-red-500 fill-current animate-pulse group-hover:scale-125 transition-transform" />
               <span>by OrbitWayfarer Team</span>
             </div>
           </div>

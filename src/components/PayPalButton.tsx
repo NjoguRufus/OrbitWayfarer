@@ -17,10 +17,20 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, currency, onSuccess
             {
               amount: {
                 value: amount.toString(),
-                currency_code: currency
+                currency_code: currency,
+                breakdown: {
+                  item_total: {
+                    currency_code: currency,
+                    value: amount.toString()
+                  }
+                }
               },
+              description: "Travel Booking with OrbitWayfarer"
             },
           ],
+          application_context: {
+            shipping_preference: "NO_SHIPPING"
+          }
         });
       }}
       onApprove={async (data, actions) => {
@@ -32,6 +42,10 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, currency, onSuccess
       }}
       onError={(err) => {
         console.error('PayPal error:', err);
+        alert('Payment failed. Please try again.');
+      }}
+      onCancel={() => {
+        alert("Payment cancelled. Please try again when you're ready.");
       }}
     />
   );
