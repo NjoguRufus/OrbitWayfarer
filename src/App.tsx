@@ -23,6 +23,7 @@ import Bali from './pages/destinations/Bali';
 import Maldives from './pages/destinations/Maldives';
 import PayPalProvider from './components/PayPalProvider';
 import ScrollToTop from './components/ScrollToTop';
+import { AdminDashboard } from './components/AdminDashboard'; // Updated import path
 
 function App() {
   return (
@@ -51,6 +52,11 @@ function App() {
                 <Route path="/destinations/santorini" element={<Santorini />} />
                 <Route path="/destinations/bali" element={<Bali />} />
                 <Route path="/destinations/maldives" element={<Maldives />} />
+
+                {/* Admin Dashboard Route */}
+                <Route path="/admin" element={<AdminDashboard />} />
+
+                {/* Catch-all Route for 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

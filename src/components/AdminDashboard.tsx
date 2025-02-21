@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { BarChart, Users, Calendar, DollarSign } from 'lucide-react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Users, Calendar, DollarSign } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -14,12 +15,43 @@ interface Booking {
   userEmail: string;
 }
 
+interface AppUser {
+  id: string;
+  email: string;
+  lastSignInTime?: string;
+}
+
 export function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [usersList, setUsersList] = useState<AppUser[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('week');
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
 
+  // Allowed admin emails
+  const allowedAdmins = ['adminorbit@mail.com', 'admin2@mail.com'];
+
+  // Check authentication and authorization for admins
   useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && allowedAdmins.includes(user.email || '')) {
+        setAuthorized(true);
+      } else {
+        setAuthorized(false);
+      }
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch confirmed bookings from Firestore if authorized
+  useEffect(() => {
+    if (!authorized) return;
+
     const fetchBookings = async () => {
       try {
         const bookingsRef = collection(db, 'bookings');
@@ -33,12 +65,45 @@ export function AdminDashboard() {
       } catch (error) {
         console.error('Error fetching bookings:', error);
       } finally {
-        setLoading(false);
+        setLoadingBookings(false);
       }
     };
 
     fetchBookings();
-  }, []);
+  }, [authorized]);
+
+  // Fetch signed-in users from a "users" collection in Firestore
+  useEffect(() => {
+    if (!authorized) return;
+
+    const fetchUsers = async () => {
+      try {
+        const usersRef = collection(db, 'users');
+        const snapshot = await getDocs(usersRef);
+        const fetchedUsers = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() as Omit<AppUser, 'id'>)
+        })) as AppUser[];
+        setUsersList(fetchedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [authorized]);
+
+  // Show a loading state while authentication is being verified
+  if (!authChecked) {
+    return <div>Checking authentication...</div>;
+  }
+
+  // If the user is not authorized, show a message
+  if (!authorized) {
+    return <div>You are not authorized to view this page.</div>;
+  }
 
   const calculateMetrics = () => {
     const totalRevenue = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
@@ -114,7 +179,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Recent Bookings */}
-      <div className="bg-white rounded-lg shadow-md">
+      <div className="bg-white rounded-lg shadow-md mb-8">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold">Recent Bookings</h2>
         </div>
@@ -143,7 +208,7 @@ export function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
+              {loadingBookings ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center">
                     Loading...
@@ -158,29 +223,72 @@ export function AdminDashboard() {
               ) : (
                 bookings.map((booking) => (
                   <tr key={booking.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {booking.propertyName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {booking.userEmail}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{booking.propertyName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{booking.userEmail}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {booking.checkIn.toDate().toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {booking.checkOut.toDate().toLocaleDateString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      ${booking.totalPrice}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          booking.status === 'confirmed'
+                            ? 'bg-green-100 text-green-800'
+                            : booking.status === 'cancelled'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Signed-in Users */}
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold">Signed-in Users</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Sign-In
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loadingUsers ? (
+                <tr>
+                  <td colSpan={2} className="px-6 py-4 text-center">
+                    Loading...
+                  </td>
+                </tr>
+              ) : usersList.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="px-6 py-4 text-center">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                usersList.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.lastSignInTime || 'N/A'}
                     </td>
                   </tr>
                 ))

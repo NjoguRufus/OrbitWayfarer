@@ -8,7 +8,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase'; // Import Firestore
+import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -33,8 +34,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function createUserDocument(user: User) {
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        lastSignInTime: Timestamp.now(),
+        role: 'user' // Default role
+      });
+    }
+  }
+
   async function signup(email: string, password: string) {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await createUserDocument(userCredential.user);
   }
 
   async function login(email: string, password: string) {
@@ -43,7 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function loginWithGoogle() {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const userCredential = await signInWithPopup(auth, provider);
+    await createUserDocument(userCredential.user);
   }
 
   async function logout() {
@@ -51,7 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await createUserDocument(user);
+      }
       setCurrentUser(user);
       setLoading(false);
     });

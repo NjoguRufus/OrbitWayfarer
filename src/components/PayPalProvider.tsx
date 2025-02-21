@@ -7,11 +7,10 @@ interface PayPalProviderProps {
 
 const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   const initialOptions = {
-    "client-id": "AQ4fPSHQQv37Nal4JXYf0jIR_hFrZ7prQsOA2M1sDlv5cIELkSdvZcZUv5BsKRPyJsl4MqMvLnZ3XELq",
+    clientId: "AQ4fPSHQQv37Nal4JXYf0jIR_hFrZ7prQsOA2M1sDlv5cIELkSdvZcZUv5BsKRPyJsl4MqMvLnZ3XELq",
     currency: "USD",
     intent: "capture",
     components: "buttons",
-    "data-client-token": "abc123xyz==",
   };
 
   return (
