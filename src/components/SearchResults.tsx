@@ -1,141 +1,300 @@
-import React, { useState } from 'react';
-import { Star, Filter, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Users, Calendar, DollarSign, Menu } from 'lucide-react';
 
-interface SearchResult {
+interface Booking {
   id: string;
-  type: 'hotel' | 'flight' | 'tour';
-  name: string;
-  location: string;
-  price: number;
-  rating: number;
-  image: string;
-  description: string;
+  propertyName: string;
+  checkIn: Timestamp;
+  checkOut: Timestamp;
+  guests: number;
+  totalPrice: number;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  userEmail: string;
 }
 
-const mockResults: SearchResult[] = [
-  {
-    id: '1',
-    type: 'hotel',
-    name: 'Santorini Paradise Resort',
-    location: 'Santorini, Greece',
-    price: 299,
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1496318447583-f524534e9ce1?auto=format&fit=crop&q=80&w=1200',
-    description: 'Luxury resort with stunning caldera views and infinity pool'
-  },
-  {
-    id: '2',
-    type: 'hotel',
-    name: 'Bali Beachfront Villa',
-    location: 'Bali, Indonesia',
-    price: 199,
-    rating: 4.6,
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1200',
-    description: 'Private villa with direct beach access and personal butler'
-  },
-  {
-    id: '3',
-    type: 'hotel',
-    name: 'Maldives Water Villa',
-    location: 'Maldives',
-    price: 599,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&q=80&w=1200',
-    description: 'Overwater villa with glass floor and private pool'
-  }
-];
+interface AppUser {
+  id: string;
+  email: string;
+  lastSignInTime?: string | Timestamp;
+}
 
-export function SearchResults() {
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [rating, setRating] = useState(0);
+const formatLastSignIn = (time?: string | Timestamp): string => {
+  if (!time) return 'N/A';
+  if (typeof time === 'object' && 'toDate' in time && typeof time.toDate === 'function') {
+    return time.toDate().toLocaleDateString();
+  }
+  return String(time);
+};
+
+export function AdminDashboard() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [usersList, setUsersList] = useState<AppUser[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('week');
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+
+  // Allowed admin emails
+  const allowedAdmins = ['adminorbit@mail.com', 'admin2@mail.com'];
+
+  // Check authentication and authorization for admins
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthorized(!!(user && allowedAdmins.includes(user.email || '')));
+      setAuthChecked(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch confirmed bookings from Firestore if authorized
+  useEffect(() => {
+    if (!authorized) return;
+
+    const fetchBookings = async () => {
+      try {
+        const bookingsRef = collection(db, 'bookings');
+        const q = query(bookingsRef, where('status', '==', 'confirmed'));
+        const snapshot = await getDocs(q);
+        const fetchedBookings = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Booking[];
+        setBookings(fetchedBookings);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchBookings();
+  }, [authorized]);
+
+  // Fetch signed-in users from Firestore if authorized
+  useEffect(() => {
+    if (!authorized) return;
+
+    const fetchUsers = async () => {
+      try {
+        const usersRef = collection(db, 'users');
+        const snapshot = await getDocs(usersRef);
+        const fetchedUsers = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() as Omit<AppUser, 'id'>)
+        })) as AppUser[];
+        setUsersList(fetchedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [authorized]);
+
+  if (!authChecked) {
+    return <div className="flex justify-center items-center h-screen text-gray-300">Checking authentication...</div>;
+  }
+  if (!authorized) {
+    return <div className="flex justify-center items-center h-screen text-red-400">You are not authorized to view this page.</div>;
+  }
+
+  const calculateMetrics = () => {
+    const totalRevenue = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const totalBookings = bookings.length;
+    const activeGuests = bookings.filter((booking) => {
+      const now = Timestamp.now();
+      return booking.checkIn <= now && booking.checkOut >= now;
+    }).length;
+    return { totalRevenue, totalBookings, activeGuests };
+  };
+
+  const { totalRevenue, totalBookings, activeGuests } = calculateMetrics();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Filters Section */}
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64 bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Filter className="w-5 h-5 text-blue-500" />
-            <h3 className="text-lg font-semibold">Filters</h3>
+    <div className="min-h-screen flex bg-gray-900 text-gray-100">
+      {/* Sidebar */}
+      {isSidebarOpen && (
+        <aside className="w-64 bg-gray-800 p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold">Dashboard</h2>
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
-          
-          {/* Price Range Filter */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Price Range
-            </label>
-            <div className="space-y-2">
-              <input
-                type="range"
-                min="0"
-                max="1000"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
-              </div>
-            </div>
-          </div>
+          <nav>
+            <ul>
+              <li className="mb-4 hover:text-blue-400 cursor-pointer">Overview</li>
+              <li className="mb-4 hover:text-blue-400 cursor-pointer">Bookings</li>
+              <li className="mb-4 hover:text-blue-400 cursor-pointer">Users</li>
+              <li className="mb-4 hover:text-blue-400 cursor-pointer">Settings</li>
+            </ul>
+          </nav>
+        </aside>
+      )}
 
-          {/* Rating Filter */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Minimum Rating
-            </label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`p-1 rounded ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                >
-                  <Star className="w-5 h-5 fill-current" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Results Grid */}
-        <div className="flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockResults.map((result) => (
-              <div key={result.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <img
-                    src={result.image}
-                    alt={result.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-full text-sm font-semibold text-blue-500">
-                    ${result.price}/night
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-1">{result.name}</h3>
-                  <div className="flex items-center gap-1 text-gray-600 mb-2">
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-sm">{result.location}</span>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">{result.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="font-medium">{result.rating}</span>
-                    </div>
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
+      {/* Main Content */}
+      {/* Add padding-top to ensure the content begins below your navbar */}
+      <main className="flex-1 p-8 pt-16">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <div className="flex gap-2">
+            {['day', 'week', 'month'].map((period) => (
+              <button
+                key={period}
+                onClick={() => setSelectedPeriod(period as typeof selectedPeriod)}
+                className={`px-4 py-2 rounded-lg ${
+                  selectedPeriod === period
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
             ))}
           </div>
         </div>
-      </div>
+
+        {/* Metrics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-900 rounded-lg">
+                <DollarSign className="w-6 h-6 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-gray-400">Total Revenue</p>
+                <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-900 rounded-lg">
+                <Calendar className="w-6 h-6 text-green-400" />
+              </div>
+              <div>
+                <p className="text-gray-400">Total Bookings</p>
+                <p className="text-2xl font-bold">{totalBookings}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-900 rounded-lg">
+                <Users className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-gray-400">Active Guests</p>
+                <p className="text-2xl font-bold">{activeGuests}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Bookings */}
+        <div className="bg-gray-800 rounded-lg shadow mb-8">
+          <div className="p-6 border-b border-gray-700">
+            <h2 className="text-xl font-semibold">Recent Bookings</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Property</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Guest</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Check In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Check Out</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {loadingBookings ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center">Loading...</td>
+                  </tr>
+                ) : bookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center">No bookings found</td>
+                  </tr>
+                ) : (
+                  bookings.map((booking) => (
+                    <tr key={booking.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">{booking.propertyName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{booking.userEmail}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {booking.checkIn.toDate().toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {booking.checkOut.toDate().toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.status === 'confirmed'
+                              ? 'bg-green-900 text-green-400'
+                              : booking.status === 'cancelled'
+                              ? 'bg-red-900 text-red-400'
+                              : 'bg-blue-900 text-blue-400'
+                          }`}
+                        >
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Signed-in Users */}
+        <div className="bg-gray-800 rounded-lg shadow">
+          <div className="p-6 border-b border-gray-700">
+            <h2 className="text-xl font-semibold">Signed-in Users</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Last Sign-In</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {loadingUsers ? (
+                  <tr>
+                    <td colSpan={2} className="px-6 py-4 text-center">Loading...</td>
+                  </tr>
+                ) : usersList.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} className="px-6 py-4 text-center">No users found</td>
+                  </tr>
+                ) : (
+                  usersList.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{formatLastSignIn(user.lastSignInTime)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
