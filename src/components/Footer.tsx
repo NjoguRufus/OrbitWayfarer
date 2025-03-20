@@ -139,26 +139,10 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mb-4 sm:mb-0">
               © 2024 OrbitWayfarer. All rights reserved.
             </p>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-gray-400 text-sm group">
-                <span>Made with</span>
-                <Heart className="w-4 h-4 mx-1 text-red-500 fill-current animate-pulse group-hover:scale-125 transition-transform" />
-                <span>by OrbitWayfarer Team</span>
-              </div>
-              {/* Developer Credit Section */}
-              <a
-                href="https://astraronix.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                <img
-                  src="https://i.imgur.com/T7mH4Ly.png"
-                  alt="Astraronix Solutions Logo"
-                  className="h-6 mr-2"
-                />
-                <span className="text-sm">Astraronix Solutions</span>
-              </a>
+            <div className="flex items-center text-gray-400 text-sm group">
+              <span>Made with</span>
+              <Heart className="w-4 h-4 mx-1 text-red-500 fill-current animate-pulse group-hover:scale-125 transition-transform" />
+              <span>by OrbitWayfarer Team</span>
             </div>
           </div>
         </div>
